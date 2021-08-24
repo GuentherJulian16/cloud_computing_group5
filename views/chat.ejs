@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>StudyChat</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+  </head>
+  <body onload="loadMessages()">
+    <%- include('./header.ejs') %>
+
+    <div class="container">
+      <p class="h1"><%= chat.name %></p>
+      <hr style="border-top-width: 3px">
+
+      <div id="divMessages" style="height: 400px; overflow: scroll; overflow-x: hidden; overflow-y:auto; margin-bottom: 20px; word-break: break-word">
+
+      </div>
+
+      <hr style="border-top-width: 3px">
+      <div class="input-group">
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button" onclick="sendMessage()">Senden</button>
+        </span>
+        <input type="text" class="form-control" placeholder="Nachricht" id="message">
+      </div>
+
+      <button class="btn btn-primary" style="margin-top: 8px;" onclick="leaveChat()"><span class="glyphicon glyphicon-log-out" style="padding-right: 10px;"></span>Chat verlassen</button>
+    </div>
+
+    <script>
+      var time = new Date("<%= timeChatJoined %>").getTime();
+      setInterval(function(){ loadMessages() }, 3000);
+
+      document.getElementById("message").addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          sendMessage();
+        }
+      });
+
+      function logout() {
+        fetch("/logout", {
+            method: 'GET'
+        }).then(response => {
+          window.location.reload();
+        })
+      }
+
+      function loadMessages() {
+        fetch("/chats/<%= chat.id %>/messages/" + time, {
+            method: 'GET'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.status == 1) {
+            var div = document.getElementById("divMessages");
+            for(var i = 0; i < data.data.length; i++) {
+              if(document.getElementById(data.data[i].id) == null) {
+                var created = new Date(data.data[i].time_created).toISOString().slice(0, 19).replace('T', ' ');
+                var p = document.createElement("p");
+                p.id = data.data[i].id;
+                if(data.data[i].username == null) {
+                  p.style.fontStyle = "italic";
+                  p.innerText = data.data[i].message;
+                } else {
+                  p.innerText = data.data[i].username + "(" + new Date(created).getHours() + ":" + new Date(created).getMinutes() + "): " + data.data[i].message;
+                }
+                div.appendChild(p);
+              }
+            }
+          }
+          time = new Date(new Date().toISOString().slice(0, 19).replace('T', ' ')).getTime();
+        });
+      }
+
+      function sendMessage() {
+        var message = document.getElementById("message").value;
+        if(message != "") {
+          var data = {
+            message: message,
+            chatId: parseInt("<%= chat.id %>")
+          }
+          fetch("/chats/messages", {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("message").value = "";
+            loadMessages();
+          });
+        }
+      }
+      
+      function leaveChat() {
+        var data = {
+          message: "<%= session.user.username %> hat den Chat verlassen",
+          chatId: parseInt("<%= chat.id %>"),
+          userId: 0
+        }
+        fetch("/chats/messages", {
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          window.location.href = "/";
+        });
+      }
+
+      
+    </script>
+
+  </body>
+</html>

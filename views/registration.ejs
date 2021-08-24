@@ -1,0 +1,89 @@
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <title>Registrierung</title>
+
+    <script>
+      function register() {
+        var password = document.getElementById("password").value;
+        var passwordConfirm = document.getElementById("passwordConfirm").value;
+        var encryptedPassword = CryptoJS.SHA512(password, { outputLength: 512 }).toString();
+        var encryptedPasswordConfirm = CryptoJS.SHA512(passwordConfirm, { outputLength: 512 }).toString();
+        const data = {
+          username: document.getElementById("username").value,
+          password: encryptedPassword,
+          passwordConfirm: encryptedPasswordConfirm
+        };
+        fetch("/users", {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.status == 1) {
+            window.location.href = "/";
+          } else {
+            let infoText = "";
+            document.getElementById("password").classList.remove("is-invalid");
+            document.getElementById("passwordConfirm").classList.remove("is-invalid");
+
+            if(data.kind && data.kind == "passwords_dont_match") {
+              infoText = "Fehler bei der Registrierung. Die Passwörter stimmen nicht überein!"
+              document.getElementById("password").classList.add("is-invalid");
+              document.getElementById("passwordConfirm").classList.add("is-invalid");
+            }
+            if(data.kind && data.kind == "user_already_exists") {
+              infoText = "Fehler bei der Registrierung. Ein User mit dem angegebenen Namen existiert bereits!"
+            }
+            if(infoText == "") {
+              infoText = "Fehler bei der Registrierung!"
+            }
+            document.getElementById("infoRegisterFailedText").innerText = infoText;
+            document.getElementById("infoRegisterFailed").style.display = "block";
+          }
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="container"> 
+        <div class="form-group" style="padding-top: 50px;">
+          <form action="javascript:register();" style="background: #222; box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3); padding: 35px; padding-bottom: 50px;">
+            <p class="h1 mb-3 text-white">Erstelle einen neuen Account</p>
+            <div id="infoRegisterFailed" class="alert alert-danger" style="display: none; padding: 0.5em 0.75em;" role="alert">
+              <p id="infoRegisterFailedText" style="margin: 0;"></p>
+            </div>
+            <div class="form-group">
+                  <label>Username</label>
+                  <input type="text" name="username" class="form-control" id="username" aria-describedby="nameHelp" placeholder="Username" required>
+            </div>
+            <div class="form-group">
+              <label for="password">Passwort</label>
+              <input type="password" class="form-control" id="password" placeholder="Passwort" required>
+              <input type="hidden" name="password" id="passwordHidden">
+            </div>
+            <div class="form-group">
+              <label for="passwordConfirm">Passwort bestätigen</label>
+              <input type="password" class="form-control" id="passwordConfirm" placeholder="Passwort bestätigen" required>
+              <input type="hidden" name="passwordConfirm" id="passwordConfirmHidden">
+            </div>
+            <button type="submit" class="btn btn-outline-primary pl-5 pr-5 font-weight-bold text-white border-white">
+              Registrieren
+            </button>
+            <p style="float: right;">Du besitzt schon einen Account? <a class="ml-1" style="color: #ffffff;" href="/">Zum Login</a></p>
+          </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html> 

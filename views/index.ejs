@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>StudyChat</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <style>
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 1; /* Sit on top */
+        left: 0;
+        top: 0;
+        width: 100%; /* Full width */
+        height: 100%; /* Full height */
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgb(0,0,0); /* Fallback color */
+        background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      }
+
+      /* Modal Content/Box */
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 15% from the top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 50%; /* Could be more or less, depending on screen size */
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('./header.ejs') %>
+
+    <div class="container">
+      <p class="h1">Willkommen bei StudyChat</p>
+      <hr style="border-top-width: 3px">
+
+      <% if(!session.user) { %>
+        <p>Melde dich an, um den Chaträumen beizutreten</p>
+      <% } else { %>
+        <button type="button" onclick="openChatDialog()" class="btn btn-primary btn-outline-primary">Neuer Chatraum</button>
+
+        <% if(chats && chats.length > 0) { %>
+          <p class="h3">Chaträume:</p>
+          <% for(var i = 0; i < chats.length; i++) { %>
+            <div class="card mb-5" style="padding: 10px; border: 1px; border-color: #222; border-radius: 5px; border-style: solid; margin-bottom: 7px;">
+              <div class="card-body">
+                <p class="card-title h4"><%= chats[i].name %></p>
+                <p class="card-text"><%= chats[i].description %></p>
+                <a href="/chats/room/<%= chats[i].id %>" class="btn btn-primary">Chat beitreten</a>
+              </div>
+            </div>
+          <% } %>
+        <% } else { %>
+          <p class="h3">Keine Chaträume vorhanden!</p>
+        <% } %>
+      <% } %>
+
+      <div id="loginModal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="closeLoginModal">&times;</span>
+          <p class="h2" style="margin-top: 0;">Anmelden</p>
+          <hr />
+          <form action="javascript:login()">
+            <div id="infoLoginFailed" class="alert alert-danger" style="display: none; padding: 0.5em 0.75em;" role="alert">
+              <p style="margin: 0;">Der Loginversuch war nicht erfolgreich. Überprüfe deine Angaben!</p>
+            </div>
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" class="form-control" id="username" placeholder="Username">
+            </div>
+            <div class="form-group">
+              <label for="password">Passwort</label>
+              <input type="password" class="form-control" id="password" placeholder="Passwort">
+            </div>
+            <button type="submit" class="btn btn-primary">Anmelden</button>
+            <hr />
+            <span>Noch keinen Account?</span>
+            <a href="/registration" type="button" class="btn btn-link">Zur Registrierung</a>
+          </form>
+        </div>
+      </div>
+
+      <div id="createChatModal" class="modal">
+        <div class="modal-content">
+          <span class="close" id="closeCreateChatModal">&times;</span>
+          <p class="h2" style="margin-top: 0;">Chat erstellen</p>
+          <hr />
+          <form action="javascript:createChat()">
+            <div class="form-group">
+              <label for="username">Chatname</label>
+              <input type="text" class="form-control" id="chatName" placeholder="Chatname">
+            </div>
+            <div class="form-group">
+              <label for="chatDescription">Beschreibung</label>
+              <input type="text" class="form-control" id="chatDescription" placeholder="Beschreibung">
+            </div>
+            <button type="submit" class="btn btn-primary">Chat erstellen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+      var loginModal = document.getElementById("loginModal");
+      var createChatModal = document.getElementById("createChatModal");
+      var closeLoginSpan = document.getElementById("closeCreateChatModal");
+      var closeCreateChatModal = document.getElementById("closeCreateChatModal");
+
+      closeLoginSpan.onclick = function() {
+        loginModal.style.display = "none";
+      }
+
+      closeCreateChatModal.onclick = function() {
+        createChatModal.style.display = "none";
+      }
+
+      window.onclick = function(event) {
+        if (event.target == createChatModal || event.target == loginModal) {
+          loginModal.style.display = "none";
+          createChatModal.style.display = "none";
+        }
+      }
+
+      function openLoginDialog() {
+        loginModal.style.display = "block";
+      }
+
+      function openChatDialog() {
+        createChatModal.style.display = "block";
+      }
+
+      function logout() {
+        fetch("/logout", {
+            method: 'GET'
+        }).then(response => {
+          window.location.reload();
+        })
+      }
+
+      function login() {
+        var password = document.getElementById("password").value;
+        var encryptedPassword = CryptoJS.SHA512(password, { outputLength: 512 }).toString();
+        const data = {
+            username: document.getElementById("username").value,
+            password: encryptedPassword
+        };
+        fetch("/login", {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.status == 1) {
+            window.location.href = "/";
+          } else {
+            document.getElementById("infoLoginFailed").style.display = "block";
+          }
+        });
+      }
+
+      function createChat() {
+        const data = {
+            name: document.getElementById("chatName").value,
+            description: document.getElementById("chatDescription").value
+        };
+
+        if(data.name == "" || data.description == "") return;
+
+        fetch("/chats", {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+          if(data.status == 1) {
+            window.location.href = "/chats/room/" + data.id;
+          }
+        });
+      }
+    </script>
+
+  </body>
+</html>
