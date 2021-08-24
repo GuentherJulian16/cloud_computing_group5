@@ -109,7 +109,11 @@ try:
             {'IpProtocol': 'tcp',
              'FromPort': 443,
              'ToPort': 443,
-             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]}
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
+            {'IpProtocol': 'tcp',
+             'FromPort': 3000,
+             'ToPort': 3000,
+             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]},
         ])
     print('Ingress Successfully Set %s' % data)
 except ClientError as e:
@@ -118,9 +122,9 @@ except ClientError as e:
 
 userDataDB = ('#!/bin/bash\n'
               '# essential tools\n'
-              'apt install -y htop git\n'
+              'sudo apt-get install -y htop git\n'
               '# mysql\n'
-              'apt install -y mysql-server\n'
+              'sudo apt-get install -y mysql-server\n'
               '\n'
               'service mysql start\n'
               '\n'
@@ -173,10 +177,10 @@ print(instanceIdDB)
 
 userDataWebServer = ('#!/bin/bash\n'
                      '# essential tools\n'
-                     'apt install -y htop git\n'
+                     'sudo apt-get install -y htop git\n'
                      '# nodejs\n'
                      'curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -\n'
-                     'apt install -y nodejs\n'
+                     'sudo apt-get install -y nodejs\n'
                      '\n'
                      'git clone https://github.com/GuentherJulian16/cloud_computing_group5.git\n'
                      '\n'
@@ -185,6 +189,8 @@ userDataWebServer = ('#!/bin/bash\n'
                      'node app.js\n'
                      '# change hostname of db connection\n'
                      'sed -i s/localhost/' + privateIpDB + '/g models/db.js\n'
+                     'sed -i s/username/ cloud_comp_user /g models/db.js\n'
+                     'sed -i s/userpassword/ demo5 /g models/db.js\n'
                      'cat models/db.js\n'
                      )
 
