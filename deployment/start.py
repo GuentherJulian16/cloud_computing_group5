@@ -22,7 +22,8 @@ availabilityZone = 'us-east-1a'
 
 # AMI ID of Amazon Linux 2 image 64-bit x86 in us-east-1 (can be retrieved, e.g., at
 # https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#LaunchInstanceWizard:)
-imageId = 'ami-0d5eff06f840b45e9'
+#imageId = 'ami-0d5eff06f840b45e9'
+imageId = 'ami-09e67e426f25ce0d7'
 # for eu-central-1, AMI ID of Amazon Linux 2 would be:
 # imageId = 'ami-0cc293023f983ed53'
 
@@ -116,14 +117,12 @@ except ClientError as e:
 
 
 userDataDB = ('#!/bin/bash\n'
-              '# extra repo for RedHat rpms\n'
-              'yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n'
               '# essential tools\n'
-              'yum install -y joe htop git\n'
+              'apt install -y htop git\n'
               '# mysql\n'
-              'yum install -y mariadb mariadb-server\n'
+              'apt install -y mysql-server\n'
               '\n'
-              'service mariadb start\n'
+              'service mysql start\n'
               '\n'
               'echo "create database db_cloudcomputing" | mysql -u root\n'
               'echo "create table users ( id INT AUTO_INCREMENT, username VARCHAR(150) NOT NULL, password VARCHAR(150) NOT NULL, PRIMARY KEY (id))" | mysql -u root cloud_comp_user\n'
@@ -173,25 +172,20 @@ instance.wait_until_running()
 print(instanceIdDB)
 
 userDataWebServer = ('#!/bin/bash\n'
-                     '# extra repo for RedHat rpms\n'
-                     'yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm\n'
                      '# essential tools\n'
-                     'yum install -y joe htop git\n'
-                     '# mysql\n'
-                     'yum install -y httpd php php-mysql\n'
+                     'apt install -y htop git\n'
+                     '# nodejs\n'
+                     'curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -\n'
+                     'apt install -y nodejs\n'
                      '\n'
-                     'service httpd start\n'
+                     'git clone https://github.com/GuentherJulian16/cloud_computing_group5.git\n'
                      '\n'
-                     # 'wget http://mmnet.informatik.hs-fulda.de/cloudcomp/StudyChat-in-the-clouds.tar.gz\n'
-                     # 'cp StudyChat-in-the-clouds.tar.gz /var/www/html/\n'
-                     # 'tar zxvf StudyChat-in-the-clouds.tar.gz\n'
-                     'cd /var/www/html\n'
-                     'wget https://gogs.informatik.hs-fulda.de/srieger/cloud-computing-msc-ai-examples/raw/master/example-projects/StudyChat-in-the-clouds/web-content/index.php\n'
-                     'wget https://gogs.informatik.hs-fulda.de/srieger/cloud-computing-msc-ai-examples/raw/master/example-projects/StudyChat-in-the-clouds/web-content/cloud.php\n'
-                     'wget https://gogs.informatik.hs-fulda.de/srieger/cloud-computing-msc-ai-examples/raw/master/example-projects/StudyChat-in-the-clouds/web-content/config.php\n'
-                     '\n'
+                     'cd cloud_computing_group5\n'
+                     'npm install\n'
+                     'node app.js\n'
                      '# change hostname of db connection\n'
-                     'sed -i s/localhost/' + privateIpDB + '/g /var/www/html/config.php\n'
+                     'sed -i s/localhost/' + privateIpDB + '/g models/db.js\n'
+                     'cat models/db.js\n'
                      )
 
 for i in range(1, 3):
