@@ -3,8 +3,8 @@ const mysql = require("mysql");
 // Create a connection to the database
 const connection = mysql.createConnection({
   host: "localhost",
-  user: "admin",
-  password: "admin",
+  user: "username",
+  password: "userpassword",
   database: "db_cloudcomputing"
 });
 
