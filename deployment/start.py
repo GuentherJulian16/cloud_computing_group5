@@ -29,7 +29,7 @@ imageId = 'ami-09e67e426f25ce0d7'
 
 # potentially change instanceType to t2.micro for "free tier" if using a regular account
 # for production, t3.nano seams better
-instanceType = 't2.nano'
+instanceType = 't2.small'
 
 keyName = 'cloud_comp5'
 
@@ -122,6 +122,8 @@ except ClientError as e:
 
 userDataDB = ('#!/bin/bash\n'
               '# essential tools\n'
+              'sudo apt-get update'
+              '\n'
               'sudo apt-get install -y htop git\n'
               '# mysql\n'
               'sudo apt-get install -y mysql-server\n'
@@ -177,6 +179,8 @@ print(instanceIdDB)
 
 userDataWebServer = ('#!/bin/bash\n'
                      '# essential tools\n'
+                     'sudo apt-get update'
+                     '\n'
                      'sudo apt-get install -y htop git\n'
                      '# nodejs\n'
                      'curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -\n'
