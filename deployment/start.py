@@ -192,8 +192,8 @@ userDataWebServer = ('#!/bin/bash\n'
                      'npm install\n'
                      '# change hostname of db connection\n'
                      'sed -i s/localhost/' + privateIpDB + '/g models/db.js\n'
-                     'sed -i s/username/ cloud_comp_user /g models/db.js\n'
-                     'sed -i s/userpassword/ demo5 /g models/db.js\n'
+                     'sed -i s/username/cloud_comp_user/g models/db.js\n'
+                     'sed -i s/userpassword/demo5/g models/db.js\n'
                      'cat models/db.js\n'
                      'node app.js\n'
                      )
@@ -239,7 +239,7 @@ for i in range(1, 3):
         time.sleep(1)
         timeout -= 1
     if instance.public_ip_address is not None:
-        print("StudyChat-in-the-clouds can be accessed at: " + instance.public_ip_address)
+        print("StudyChat can be accessed at: " + instance.public_ip_address)
     else:
         print("Could not get public IP using boto3, this is likely an AWS Educate problem. You can however lookup the "
               "public ip from the AWS management console.")
