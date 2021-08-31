@@ -142,7 +142,9 @@ userDataDB = ('#!/bin/bash\n'
               'echo "CREATE USER \'cloud_comp_user\'@\'%\' IDENTIFIED WITH mysql_native_password BY \'demo5\';" | mysql -u root\n'
               'echo "GRANT ALL PRIVILEGES ON db_cloudcomputing.* TO \'cloud_comp_user\'@\'%\';" | mysql -u root\n'
               'echo "FLUSH PRIVILEGES" | mysql -u root\n'
-              'sudo mysql service restart'
+              '\n'
+              'sudo /etc/init.d/mysql restart\n'
+              '\n'
               )
 # convert user-data from script with: cat install-mysql | sed "s/^/'/; s/$/\\\n'/"
 
@@ -242,7 +244,7 @@ for i in range(1, 3):
         time.sleep(1)
         timeout -= 1
     if instance.public_ip_address is not None:
-        print("StudyChat can be accessed at: " + instance.public_ip_address)
+        print("StudyChat can be accessed at: http://" + instance.public_ip_address + ":3000")
     else:
         print("Could not get public IP using boto3, this is likely an AWS Educate problem. You can however lookup the "
               "public ip from the AWS management console.")
