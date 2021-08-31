@@ -28,7 +28,7 @@ exports.create = (req, res) => {
     });
 
     // Check if user already exists <-- User.search should not work, need to implement email check
-    User.searchByUsername(user.username, (err, data) => {
+    User.getUserByName(user, (err, data) => {
       if(!data) {
         //Save User in the database
         User.create(user, (err, data) => {

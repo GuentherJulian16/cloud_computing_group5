@@ -50,4 +50,22 @@ User.getUserByNameAndPassword = (user, result) => {
   });
 };
 
+User.getUserByName = (user, result) => {
+  sql.query("SELECT * FROM users WHERE username = ?", [user.username], (err, res) => {
+    if (err) {
+      console.log("error: ", err);
+      result(err, null);
+      return;
+    }
+
+    if (res.length) {
+      console.log("found users: ", res);
+      result(null, res);
+      return;
+    }
+    // not found User with x
+    result({ kind: "not_found" }, null);
+  });
+};
+
 module.exports = User
