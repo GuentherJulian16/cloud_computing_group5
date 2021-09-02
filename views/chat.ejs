@@ -65,7 +65,7 @@
                   p.style.fontStyle = "italic";
                   p.innerText = data.data[i].message;
                 } else {
-                  p.innerText = data.data[i].username + "(" + new Date(created).getHours() + ":" + new Date(created).getMinutes() + "): " + data.data[i].message;
+                  p.innerText = data.data[i].username + ": " + data.data[i].message;
                 }
                 div.appendChild(p);
               }
