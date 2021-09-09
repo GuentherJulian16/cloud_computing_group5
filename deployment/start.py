@@ -49,7 +49,7 @@ def get_secret(secret_key: str):
             return secret[secret_key]
 
 
-# IMPORTANT !!!
+# IMPORTANT
 # place your credentials in ~/.aws/credentials, as mentioned in AWS Educate Classroom,
 # Account Details, AWC CLI -> Show (Copy and paste the following into ~/.aws/credentials)
 
@@ -67,7 +67,7 @@ instanceType = 't2.small'
 keyName = 'cloud_comp5'
 
 
-# ATTENTION
+# IMPORTANT
 # We use Amazon AWS Secret Manager to retrieve the user and password for the database connection
 # If you don't want to use the Secret Manager, just set both variables to static strings
 #database_user = "yourUserName"
