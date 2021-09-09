@@ -1,37 +1,79 @@
 import time
 
 import boto3
+import json
 from botocore.exceptions import ClientError
 
+def get_secret(secret_key: str):
 
-################################################################################################
-#
-# Configuration Parameters
-#
-################################################################################################
+    secret_name = "CloudComputing/StudyChat"
+    region_name = "us-east-1"
+
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'DecryptionFailureException':
+            # Secrets Manager can't decrypt the protected secret text using the provided KMS key.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InternalServiceErrorException':
+            # An error occurred on the server side.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidParameterException':
+            # You provided an invalid value for a parameter.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'InvalidRequestException':
+            # You provided a parameter value that is not valid for the current state of the resource.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+        elif e.response['Error']['Code'] == 'ResourceNotFoundException':
+            # We can't find the resource that you asked for.
+            # Deal with the exception here, and/or rethrow at your discretion.
+            raise e
+    else:
+        # Decrypts secret using the associated KMS CMK.
+        # Depending on whether the secret is a string or binary, one of these fields will be populated.
+        if 'SecretString' in get_secret_value_response:
+            secret = json.loads(get_secret_value_response['SecretString'])
+            return secret[secret_key]
 
 
+# IMPORTANT !!!
 # place your credentials in ~/.aws/credentials, as mentioned in AWS Educate Classroom,
 # Account Details, AWC CLI -> Show (Copy and paste the following into ~/.aws/credentials)
 
-# changed to use us-east, to be able to use AWS Educate Classroom
+# use us-east, to be able to use AWS Educate Classroom
 region = 'us-east-1'
 availabilityZone = 'us-east-1a'
-# region = 'eu-central-1'
-# availabilityZone = 'eu-central-1b'
 
-# AMI ID of Amazon Linux 2 image 64-bit x86 in us-east-1 (can be retrieved, e.g., at
-# https://console.aws.amazon.com/ec2/v2/home?region=us-east-1#LaunchInstanceWizard:)
+#Amazon Linux 2 image 64-bit x86 in us-east-1
 #imageId = 'ami-0d5eff06f840b45e9'
+#Ubuntu 20.04 image 64-bit x86 in us-east-1
 imageId = 'ami-09e67e426f25ce0d7'
-# for eu-central-1, AMI ID of Amazon Linux 2 would be:
-# imageId = 'ami-0cc293023f983ed53'
 
-# potentially change instanceType to t2.micro for "free tier" if using a regular account
-# for production, t3.nano seams better
 instanceType = 't2.small'
 
 keyName = 'cloud_comp5'
+
+
+# ATTENTION
+# We use Amazon AWS Secret Manager to retrieve the user and password for the database connection
+# If you don't want to use the Secret Manager, just set both variables to static strings
+#database_user = "yourUserName"
+#database_password = "yourPassword"
+database_user = get_secret("database_user")
+database_password = get_secret("database_password")
 
 
 ################################################################################################
@@ -139,8 +181,8 @@ userDataDB = ('#!/bin/bash\n'
               '\n'
               'echo "create table messages ( id INT AUTO_INCREMENT, userId INT NOT NULL, chatId INT NOT NULL, message VARCHAR(1000) NOT NULL, time_created DATETIME NOT NULL, PRIMARY KEY (id))" | mysql -u root db_cloudcomputing\n'
               '\n'
-              'echo "CREATE USER \'cloud_comp_user\'@\'%\' IDENTIFIED WITH mysql_native_password BY \'demo5\';" | mysql -u root\n'
-              'echo "GRANT ALL PRIVILEGES ON db_cloudcomputing.* TO \'cloud_comp_user\'@\'%\';" | mysql -u root\n'
+              'echo "CREATE USER \'' + database_user + '\'@\'%\' IDENTIFIED WITH mysql_native_password BY \'' + database_password + '\';" | mysql -u root\n'
+              'echo "GRANT ALL PRIVILEGES ON db_cloudcomputing.* TO \'' + database_user + '\'@\'%\';" | mysql -u root\n'
               'echo "FLUSH PRIVILEGES" | mysql -u root\n'
               '\n'
               'sudo /etc/init.d/mysql restart\n'
@@ -197,9 +239,8 @@ userDataWebServer = ('#!/bin/bash\n'
                      'npm install\n'
                      '# change hostname of db connection\n'
                      'sed -i s/localhost/' + privateIpDB + '/g models/db.js\n'
-                     'sed -i s/username/cloud_comp_user/g models/db.js\n'
-                     'sed -i s/userpassword/demo5/g models/db.js\n'
-                     'cat models/db.js\n'
+                     'sed -i s/username/' + database_user + '/g models/db.js\n'
+                     'sed -i s/userpassword/' + database_password + '/g models/db.js\n'
                      'node app.js\n'
                      )
 
